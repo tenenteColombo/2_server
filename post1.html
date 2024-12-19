@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Post 1</title>
+    <style>
+        body {
+            background-color: #000;
+            color: #00ff00;
+            font-family: 'Courier New', Courier, monospace;
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+            padding-left: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        h1,
+        h2 {
+            color: #00ff00;
+            margin-top: 20px;
+        }
+
+        button {
+            background-color: #000;
+            color: #00ff00;
+            border: 1px solid #00ff00;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        button:hover {
+            background-color: #00ff00;
+            color: #000;
+        }
+
+        textarea {
+            background-color: #000;
+            color: #00ff00;
+            border: 2px solid #00ff00;
+            padding: 15px;
+            width: 90%;
+            max-width: 600px;
+            min-height: 100px;
+            overflow-y: hidden;
+            overflow-x: auto;
+            resize: none;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+            margin-bottom: 15px;
+        }
+
+        #postsContainer {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            /* Due colonne */
+            grid-gap: 20px 40px;
+            /* Gap tra le righe e le colonne (20px per le righe e 40px per le colonne) */
+            margin-top: 20px;
+            width: 90%;
+            max-width: 1200px;
+            justify-items: center;
+            /* Centra i post nelle colonne */
+            opacity: 0;
+            /* Iniziamo con i post invisibili */
+            animation: fadeIn 2s ease-out forwards;
+            /* Animazione per far apparire i post */
+        }
+
+        /* Animazione di fade-in per il container */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        .post {
+            border: 1px solid #00ff00;
+            padding: 10px;
+            width: 100%;
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+            border-radius: 8px;
+            word-wrap: break-word;
+            white-space: normal;
+            opacity: 0;
+            animation: postRandomMove 2s ease-out forwards;
+            animation-delay: calc(0.2s * var(--random-index));
+            /* Ritarda l'animazione per ogni post */
+        }
+
+        /* Animazione di movimento casuale */
+        @keyframes postRandomMove {
+            0% {
+                transform: translate(var(--random-x), var(--random-y));
+                /* Partenza da posizione casuale */
+                opacity: 0;
+            }
+
+            100% {
+                transform: translate(0, 0);
+                /* Arrivo alla posizione finale */
+                opacity: 1;
+            }
+        }
+
+        .post-footer {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: -10px;
+            margin-bottom: 10px;
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: calc(100% - 20px);
+            font-size: 13px;
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        .post-buttons {
+            display: flex;
+            gap: 10px;
+            /* Distanza fissa tra i pulsanti */
+            justify-content: flex-end;
+            /* Allinea i pulsanti alla fine del post */
+            margin-top: 10px;
+        }
+
+        .edit-mode {
+            display: none;
+        }
+
+        .confirm-delete {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #333;
+            border: 1px solid #00ff00;
+            color: #00ff00;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .confirm-buttons {
+            display: flex;
+            justify-content: space-around;
+            gap: 10px;
+        }
+
+        .confirm-yes,
+        .confirm-no {
+            background-color: #000;
+            color: #00ff00;
+            border: 1px solid #00ff00;
+            padding: 10px 20px;
+            cursor: pointer;
+        }
+
+        .confirm-yes:hover,
+        .confirm-no:hover {
+            background-color: #00ff00;
+            color: #000;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>Terminal posts -> enjoy</h1>
+    </header>
+
+    <main>
+        <!-- Search and Go Back button -->
+        <div class="search-container">
+            <input type="text" id="searchInput" placeholder="Search posts..." oninput="filterPosts()">
+            <button class="back-button" onclick="goBack()">Go Back</button>
+        </div>
+
+        <section>
+            <h2>Manage Post</h2>
+            <form id="postForm">
+                <textarea id="postContent" rows="4" placeholder="Write your post here..."
+                    oninput="autoResize(this)"></textarea>
+                <div>
+                    <button type="button" onclick="addPost()">Add Post</button>
+                </div>
+            </form>
+            <div id="postsContainer"></div>
+        </section>
+
+        <script>
+            const postsContainer = document.getElementById('postsContainer');
+            const postContentInput = document.getElementById('postContent');
+            const searchInput = document.getElementById('searchInput');
+
+            // Auto-resize the textarea based on content
+            function autoResize(textarea) {
+                textarea.style.height = 'auto';  // Reset height to auto
+                textarea.style.height = (textarea.scrollHeight) + 'px';  // Set new height based on content
+            }
+
+            window.onload = async function () {
+                const response = await fetch('/api/posts');
+                const posts = await response.json();
+                posts.forEach((post) => displayPost(post));
+            };
+
+            function savePosts() {
+                const posts = [];
+                const postDivs = document.querySelectorAll('.post');
+                postDivs.forEach(postDiv => {
+                    const content = postDiv.querySelector('p').textContent;
+                    const date = postDiv.querySelector('.post-date').textContent;
+                    posts.push({ content: content, createdAt: date });
+                });
+                localStorage.setItem('posts', JSON.stringify(posts));
+            }
+
+            // Modifica della funzione di aggiunta del post
+            async function addPost() {
+                const content = postContentInput.value;
+                if (content.trim() === '') {
+                    alert('Post content cannot be empty.');
+                    return;
+                }
+
+                const post = { content: content };
+                const response = await fetch('/api/posts', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(post),
+                });
+
+                const newPost = await response.json();
+                displayPost(newPost);
+                postContentInput.value = '';
+            }
+
+            // Funzione per visualizzare il post
+            function displayPost(post) {
+                const postDiv = document.createElement('div');
+                postDiv.className = 'post';
+                postDiv.setAttribute('data-id', post.id);  // Aggiungi l'ID del post come data-id
+                postDiv.style.setProperty('--random-x', `${getRandomPosition()}px`);
+                postDiv.style.setProperty('--random-y', `${getRandomPosition()}px`);
+
+                postDiv.innerHTML = `
+        <div class="post-footer">
+            <span class="post-date">${post.createdAt || 'N/A'}</span>  <!-- Mostra la data -->
+        </div>
+        <p>${post.content}</p>
+        <div class="post-buttons">
+            <button class="edit-button" onclick="editPost(this)">Edit</button>
+            <button class="delete-button" onclick="deletePost(this)">Delete</button>
+        </div>
+    `;
+                postsContainer.appendChild(postDiv);
+            }
+
+
+
+
+
+            function getRandomPosition() {
+                const range = 100; // Distanza massima
+                return Math.floor(Math.random() * (range * 2 + 1)) - range; // Posizione casuale tra -100 e +100
+            }
+
+            async function editPost(button) {
+                const postDiv = button.closest('.post');  // Trova il div del post più vicino
+                const postId = postDiv.getAttribute('data-id');  // Ottieni l'ID del post
+                const postContent = postDiv.querySelector('p');  // Prendi il contenuto del post
+                const currentContent = postContent.textContent;
+
+                // Crea una textarea con il contenuto attuale del post
+                const textarea = document.createElement('textarea');
+                textarea.value = currentContent;
+                textarea.rows = 4;  // Imposta le righe per la textarea
+                postDiv.replaceChild(textarea, postContent);  // Sostituisci il paragrafo con la textarea
+
+                // Crea il pulsante di salvataggio per confermare le modifiche
+                const saveButton = document.createElement('button');
+                saveButton.textContent = 'Save';
+                saveButton.onclick = async () => {
+                    const updatedContent = textarea.value.trim();
+                    if (updatedContent === '') {
+                        alert('Post content cannot be empty.');
+                        return;
+                    }
+
+                    // Invia la richiesta PUT per aggiornare il post nel backend
+                    const response = await fetch(`/api/posts/${postId}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ content: updatedContent }),
+                    });
+
+                    if (response.ok) {
+                        const updatedPost = await response.json();
+
+                        // Dopo aver aggiornato, ripristina il contenuto del post come testo
+                        const updatedPostContent = document.createElement('p');
+                        updatedPostContent.textContent = updatedPost.content;
+                        postDiv.replaceChild(updatedPostContent, textarea);  // Sostituisci la textarea con il nuovo contenuto
+
+                        // Rimuovi il pulsante "Save"
+                        postDiv.querySelector('.save-button').remove();
+                    } else {
+                        alert('Error updating the post');
+                    }
+                };
+
+                // Aggiungi il pulsante di salvataggio al post
+                saveButton.classList.add('save-button');
+                postDiv.querySelector('.post-buttons').appendChild(saveButton);
+            }
+
+
+
+            function displayPostButtons(postDiv) {
+                // Mostra i pulsanti di Edit e Delete
+                const buttonsDiv = document.createElement('div');
+                buttonsDiv.className = 'post-buttons';
+                buttonsDiv.innerHTML = `
+                    <button class="edit-button" onclick="editPost(this)">Edit</button>
+                    <button class="delete-button" onclick="deletePost(this)">Delete</button>
+                `;
+                postDiv.appendChild(buttonsDiv);
+            }
+
+            async function deletePost(button) {
+                const postDiv = button.closest('.post');  // Trova il div del post più vicino
+                const postId = postDiv.getAttribute('data-id');  // Ottieni l'ID del post
+
+                // Crea la sezione di conferma
+                const confirmDiv = document.createElement('div');
+                confirmDiv.classList.add('confirm-delete');
+                confirmDiv.innerHTML = `
+        <p>Are you sure you want to delete this post?</p>
+        <div class="confirm-buttons">
+            <button class="confirm-yes" onclick="confirmDelete(${postId})">Yes</button>
+            <button class="confirm-no" onclick="cancelDelete(${postId})">No</button>
+        </div>
+    `;
+
+                // Aggiungi la sezione di conferma al post
+                postDiv.appendChild(confirmDiv);
+
+                // Nascondi i pulsanti Edit e Delete
+                const buttonsDiv = postDiv.querySelector('.post-buttons');
+                buttonsDiv.style.display = 'none';
+            }
+
+            async function confirmDelete(postId) {
+                try {
+                    // Invia la richiesta DELETE al server
+                    const response = await fetch(`/api/posts/${postId}`, {
+                        method: 'DELETE',
+                    });
+
+                    if (response.ok) {
+                        // Rimuovi il post dalla pagina
+                        const postDiv = document.querySelector(`.post[data-id="${postId}"]`);
+                        postDiv.remove();
+                    } else {
+                        alert('Error deleting the post');
+                    }
+                } catch (err) {
+                    console.error('Error during delete operation:', err);
+                    alert('Error deleting the post');
+                }
+            }
+
+            function cancelDelete(postId) {
+                const postDiv = document.querySelector(`.post[data-id="${postId}"]`);
+                const confirmDiv = postDiv.querySelector('.confirm-delete');
+
+                // Rimuovi la conferma di eliminazione
+                confirmDiv.remove();
+
+                // Rendi di nuovo visibili i pulsanti Edit e Delete
+                const buttonsDiv = postDiv.querySelector('.post-buttons');
+                buttonsDiv.style.display = 'flex';
+            }
+
+            function goBack() {
+                window.location.href = 'index.html';
+            }
+
+            function filterPosts() {
+                const searchTerm = searchInput.value.toLowerCase();
+                const posts = document.querySelectorAll('.post');
+                posts.forEach(post => {
+                    const postText = post.querySelector('p').textContent.toLowerCase();
+                    if (postText.includes(searchTerm)) {
+                        post.style.display = 'block';
+                    } else {
+                        post.style.display = 'none';
+                    }
+                });
+            }
+        </script>
+    </main>
+</body>
+
+</html>

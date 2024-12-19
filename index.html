@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blog Mariella</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <!-- Carica il font retro -->
+    <style>
+        /* Stile retro elegante con font e glow verde */
+        body {
+            background-color: #000;
+            color: #00ff00;
+            font-family: 'Courier New', Courier, monospace;
+            margin: 0;
+            padding: 0;
+            line-height: 1.4;
+            transition: background-color 0.3s, color 0.3s;
+            /* Transizione per il cambiamento del tema */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            text-align: center;
+            /* Mantieni tutto centrato */
+            position: relative;
+            flex-direction: column;
+            /* Centra il contenuto in colonna */
+        }
+
+        /* Titolo in stile retro anni '80 (senza glow troppo forte) */
+        h1 {
+            font-family: 'Press Start 2P', cursive;
+            /* Font retro per il titolo */
+            font-size: 2.5em;
+            /* Ridotto il font per il titolo */
+            margin-bottom: 15px;
+            color: #00ff00;
+            /* Colore verde per il titolo */
+            text-shadow: 0 0 5px #00ff00;
+            /* Un po' di glow, ma più sobrio */
+            visibility: hidden;
+            /* Inizialmente invisibile */
+            opacity: 0;
+            /* Impostiamo anche opacity a 0 */
+            transition: opacity 2s ease-in-out, visibility 2s;
+            /* Animazione per la visibilità */
+        }
+
+        p {
+            font-size: 1.2em;
+            /* Ridotto il font per il testo */
+            font-family: 'Courier New', Courier, monospace;
+            margin-bottom: 15px;
+            text-shadow: 0 0 10px #00ff00, 0 0 20px #00ff00;
+            /* Glow verde */
+        }
+
+        .button {
+            background-color: #000;
+            color: #00ff00;
+            border: 1px solid #00ff00;
+            padding: 8px 15px;
+            /* Ridotto padding per il bottone */
+            cursor: pointer;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 1.2em;
+            /* Ridotto font per il bottone */
+            border-radius: 8px;
+            margin-top: 20px;
+            text-shadow: 0 0 10px #00ff00, 0 0 20px #00ff00;
+            /* Glow verde */
+        }
+
+        .button:hover {
+            background-color: #00ff00;
+            color: #000;
+        }
+
+        .cursor {
+            display: inline-block;
+            width: 8px;
+            /* Smaller cursor size */
+            height: 16px;
+            /* Adjust height to match the text height */
+            background-color: #00ff00;
+            animation: blink 1s steps(2, start) infinite;
+            margin-left: 3px;
+            /* Adjust the margin for spacing */
+        }
+
+        @keyframes blink {
+            50% {
+                background-color: transparent;
+            }
+        }
+
+        .fade-in {
+            opacity: 0;
+            animation: fadeIn 2s ease-in forwards;
+        }
+
+        @keyframes fadeIn {
+            0% {
+                opacity: 0;
+            }
+
+            100% {
+                opacity: 1;
+            }
+        }
+
+        /* Modalità scura/chiara */
+        body.light-mode {
+            background-color: #2e2e2e;
+            /* Grigio medio scuro */
+            color: #000;
+        }
+
+        .light-mode .button {
+            background-color: #fff;
+            color: #000;
+            border: 1px solid #000;
+            text-shadow: none;
+            /* Rimuovi glow nella modalità chiara */
+        }
+
+        .light-mode .button:hover {
+            background-color: #000;
+            color: #fff;
+        }
+
+        .light-mode .cursor {
+            background-color: #000;
+        }
+
+        /* Rotellina dinamica in alto a destra */
+        #toggleThemeBtn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 1.2em;
+            /* Ridotto la dimensione del font */
+            cursor: pointer;
+            color: #00ff00;
+            background-color: transparent;
+            border: none;
+        }
+
+        /* Stile della rotellina che gira */
+        #toggleThemeBtn:before {
+            content: '\21bb';
+            /* Carattere di rotella (↻) */
+            display: inline-block;
+            font-size: 1.5em;
+            /* Ridotto la dimensione dell'icona */
+            animation: rotate 1.5s linear infinite;
+        }
+
+        @keyframes rotate {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1 id="title"></h1>
+    </header>
+
+    <main>
+        <section>
+            <p id="intro" class="fade-in"></p>
+            <button class="button" onclick="goToPost1()">Let's go <div class="cursor"></div></button>
+        </section>
+
+        <!-- Bottone per attivare la modalità scura/chiara con rotellina -->
+        <button id="toggleThemeBtn"></button>
+    </main>
+
+    <script>
+        // Funzione per andare alla pagina post1.html
+        function goToPost1() {
+            window.location.href = "post1.html";
+        }
+
+        // Funzione per il cambio del tema
+        function toggleTheme() {
+            const body = document.body;
+            const button = document.getElementById("toggleThemeBtn");
+
+            // Controlliamo se il tema scuro è già attivo
+            if (body.classList.contains("light-mode")) {
+                // Passiamo alla modalità scura
+                body.classList.remove("light-mode");
+                //button.textContent = "Switch to Light Mode";
+                localStorage.setItem("theme", "dark"); // Salviamo la preferenza nel localStorage
+            } else {
+                // Passiamo alla modalità chiara
+                body.classList.add("light-mode");
+                //button.textContent = "Switch to Dark Mode";
+                localStorage.setItem("theme", "light"); // Salviamo la preferenza nel localStorage
+            }
+        }
+
+
+        // Inizializzare il tema in base alla preferenza salvata nel localStorage
+        window.onload = function () {
+            const savedTheme = localStorage.getItem("theme");
+            const button = document.getElementById("toggleThemeBtn");
+
+            if (savedTheme === "light") {
+                document.body.classList.add("light-mode");
+            } else {
+                document.body.classList.remove("light-mode");
+            }
+
+            // Avviare l'effetto di scrittura per il titolo e l'introduzione
+            typeWriter("title", "Welcome to My Terminal Blog");
+            typeWriter("intro", "Andiamo a creare cose.");
+        };
+
+        // Funzione per scrivere il testo lentamente (effetto typing)
+        function typeWriter(elementId, text, i = 0, speed = 100) {
+            const element = document.getElementById(elementId);
+            if (i < text.length) {
+                element.style.visibility = 'visible';  // Impostiamo la visibilità quando inizia la scrittura
+                element.style.opacity = 1;  // Mostriamo l'elemento mentre viene scritto
+                element.innerHTML += text.charAt(i);
+                i++;
+                setTimeout(function () {
+                    typeWriter(elementId, text, i, speed);
+                }, speed);
+            }
+        }
+
+        // Aggiungiamo l'evento per il cambio del tema al click sulla rotellina
+        document.getElementById("toggleThemeBtn").addEventListener("click", toggleTheme);
+    </script>
+</body>
+
+</html>
